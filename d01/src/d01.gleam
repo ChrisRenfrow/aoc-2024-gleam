@@ -1,61 +1,50 @@
 import gleam/dict
 import gleam/int
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option
 import gleam/result
 import gleam/string
 
-fn parse_p1(input: String) -> #(List(Int), List(Int)) {
-  let parse_numbers = fn(numbers) {
-    numbers
-    |> list.map(result.unwrap(_, ""))
-    |> list.map(int.parse)
-    |> list.map(result.unwrap(_, 0))
-  }
-
-  let pairs =
-    input
-    |> string.split("\n")
-    |> list.map(string.split(_, "   "))
-
-  let left_col = pairs |> list.map(list.first(_)) |> parse_numbers
-  let right_col = pairs |> list.map(list.last(_)) |> parse_numbers
-
-  #(left_col, right_col)
+fn parse_columns(input: String) -> #(List(Int), List(Int)) {
+  input
+  |> string.split("\n")
+  |> list.map(string.split(_, "   "))
+  |> list.map(fn(row) {
+    #(
+      row |> list.first |> result.unwrap("") |> int.parse |> result.unwrap(0),
+      row |> list.last |> result.unwrap("") |> int.parse |> result.unwrap(0),
+    )
+  })
+  |> list.unzip
 }
 
-pub fn p1(input: String) {
-  let #(left, right) = parse_p1(input)
+// ======= Part 1 ========= //
 
-  let sorted_left = list.sort(left, int.compare)
-  let sorted_right = list.sort(right, int.compare)
+pub fn p1(input: String) -> Int {
+  let #(left, right) = parse_columns(input)
 
-  list.map2(sorted_left, sorted_right, fn(a, b) { int.absolute_value(a - b) })
+  list.zip(list.sort(left, int.compare), list.sort(right, int.compare))
+  |> list.map(fn(pair) {
+    let #(a, b) = pair
+    int.absolute_value(a - b)
+  })
   |> list.fold(0, int.add)
 }
 
-pub fn p2(input: String) {
-  let #(left, right) = parse_p1(input)
+// ======= Part 2 ========= //
 
-  let inc = fn(x) {
-    case x {
-      Some(i) -> i + 1
-      None -> 0
-    }
-  }
+fn get_frequency_map(numbers: List(Int)) -> dict.Dict(Int, Int) {
+  list.fold(numbers, dict.new(), fn(dict, num) {
+    dict.upsert(dict, num, fn(maybe_count) { option.unwrap(maybe_count, 0) + 1 })
+  })
+}
 
-  let rh_dict =
-    list.fold(right, dict.new(), fn(d, k) {
-      case dict.has_key(d, k) {
-        True -> dict.upsert(d, k, inc)
-        False -> dict.insert(d, k, 1)
-      }
-    })
+pub fn p2(input: String) -> Int {
+  let #(left, right) = parse_columns(input)
+  let frequency_map = get_frequency_map(right)
 
-  list.fold(left, 0, fn(acc, x) {
-    case dict.get(rh_dict, x) {
-      Ok(count) -> acc + x * count
-      Error(_) -> acc
-    }
+  list.fold(left, 0, fn(total, num) {
+    let count = dict.get(frequency_map, num) |> result.unwrap(0)
+    total + num * count
   })
 }
