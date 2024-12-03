@@ -2,3 +2,7 @@
 *.ez
 */build
 erl_crash.dump
+
+description.md
+notes.md
+input.txt
