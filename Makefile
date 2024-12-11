@@ -10,7 +10,7 @@ day:
 		exit 1; \
 	end
 	@echo "Creating d$(PADDED_DAY)..."
-	@gleam new --skip-git d$(PADDED_DAY)
+	@gleam new --skip-git solutions/d$(PADDED_DAY)
 	@./scripts/init_day.fish $(PADDED_DAY)
 	@echo "d$(PADDED_DAY) initialized successfully"
 	@echo "Good luck!"
